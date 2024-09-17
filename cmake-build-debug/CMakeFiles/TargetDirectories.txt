@@ -1,0 +1,3 @@
+/home/omer/CLionProjects/cpp_phone_directory/cmake-build-debug/CMakeFiles/cppPhoneDirectory.dir
+/home/omer/CLionProjects/cpp_phone_directory/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/omer/CLionProjects/cpp_phone_directory/cmake-build-debug/CMakeFiles/rebuild_cache.dir
