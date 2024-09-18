@@ -19,51 +19,74 @@ int main() {
             std::cerr << RED << "Can't open database" << RESET << std::endl;
             return 1;
         }
-
+        User userManager;
         crow::SimpleApp app;
 
         CROW_ROUTE(app, "/add_user")
-                .methods(crow::HTTPMethod::POST)
-                ([&conn](const crow::request &req) {
-                    std::cerr << "Request body: " << req.body << std::endl;
+                 .methods(crow::HTTPMethod::POST)
+                 ([&conn](const crow::request &req) {
+                     std::cerr << "Request body: " << req.body << std::endl;
 
-                    auto json = crow::json::load(req.body);
-                    if (!json || !json.has("name") || !json.has("surname") || !json.has("email") || !json.has(
-                            "phoneNumber")) {
-                    }
+                     auto json = crow::json::load(req.body);
+                     if (!json || !json.has("name") || !json.has("surname") || !json.has("email") || !json.has("phoneNumber")) {
+                         return crow::response{400, "Invalid parameters"};
+                     }
 
-                    auto name = json["name"].s();
-                    auto surname = json["surname"].s();
-                    auto email = json["email"].s();
-                    auto phoneNumber = json["phoneNumber"].s();
+                     std::string name = json["name"].s();
+                     std::string surname = json["surname"].s();
+                     std::string email = json["email"].s();
+                     std::string phoneNumber = json["phoneNumber"].s();
 
-                    try {
-                        addUser(conn, name, surname, email, phoneNumber);
-                        return crow::response{200, "User added successfully"};
-                    } catch (const std::exception &e) {
-                        return crow::response{500, "Database error: " + std::string(e.what())};
-                    }
-                });
+                     User user{name, surname, email, phoneNumber};
+
+                     try {
+                         user.addUser(conn);
+                         return crow::response{200, "User added successfully"};
+                     } catch (const std::exception &e) {
+                         return crow::response{500, "Database error: " + std::string(e.what())};
+                     }
+                 });
 
 
         CROW_ROUTE(app, "/remove_user")
-                .methods(crow::HTTPMethod::POST)
-                ([&conn](const crow::request &req) {
-                    auto phoneNumber = req.url_params.get("phoneNumber");
+               .methods(crow::HTTPMethod::POST)
+               ([&conn](const crow::request &req) {
+                   auto phoneNumber = req.url_params.get("phoneNumber");
 
-                    if (phoneNumber) {
-                        removeUser(conn, phoneNumber);
-                        return crow::response{200, "User successfully removed"};
-                    }
-                    return crow::response{400, "invalid parameters"};
-                });
+                   if (phoneNumber) {
+                       User user{"", "", "", phoneNumber};
+
+                       try {
+                           user.removeUser(conn);
+                           return crow::response{200, "User successfully removed"};
+                       } catch (const std::exception &e) {
+                           return crow::response{500, "Database error: " + std::string(e.what())};
+                       }
+                   }
+                   return crow::response{400, "Invalid parameters"};
+               });
 
         CROW_ROUTE(app, "/list_users")
-                .methods(crow::HTTPMethod::GET)
-                ([&conn]() {
-                    auto users = listUsers(conn);
-                    return crow::response{users};
-                });
+    .methods(crow::HTTPMethod::GET)
+    ([&conn]() {
+        User user;
+        auto users = user.listUsers(conn);
+
+        crow::json::wvalue users_json;
+        users_json["users"] = crow::json::wvalue::list();
+
+        for (const auto &u : users) {
+            crow::json::wvalue user_json;
+            user_json["name"] = u.name;
+            user_json["surname"] = u.surname;
+            user_json["email"] = u.email;
+            user_json["phoneNumber"] = u.phoneNumber;
+
+            users_json["users"].push_back(user_json);
+        }
+
+        return crow::response{users_json};
+    });
 
         app.port(18081).multithreaded().run();
     } catch (const std::exception &e) {
