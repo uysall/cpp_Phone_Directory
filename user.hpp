@@ -22,19 +22,19 @@ struct User {
         : name(std::move(name)), surname(std::move(surname)), email(std::move(email)),
           phoneNumber(std::move(phoneNumber)) {}
 
-    void addUser(pqxx::connection &conn) const {
+    void addUser(pqxx::connection &conn)  {
         pqxx::nontransaction nt(conn);
         nt.exec_params(
             "INSERT INTO direction.direction_table(name, surname, email, phonenumber) VALUES ($1, $2, $3, $4);",
             name, surname, email, phoneNumber);
     }
 
-    void removeUser(pqxx::connection &conn) const {
+    void removeUser(pqxx::connection &conn) {
         pqxx::nontransaction nt(conn);
-        nt.exec_params("DELETE FROM direction.direction_table WHERE phonenumber = $1;", phoneNumber);
+        nt.exec_params("DELETE FROM direction.direction_table WHERE phonenumber = $1;");
     }
 
-    std::vector<User> listUsers(pqxx::connection &conn) {
+    std::vector<User> listUsers(pqxx::connection &conn ) {
         pqxx::nontransaction nt(conn);
         const pqxx::result res = nt.exec("SELECT name, surname, email, phonenumber FROM direction.direction_table;");
         std::vector<User> users;
@@ -48,5 +48,7 @@ struct User {
         }
         return users;
     }
+
+    std::vector<User> listUsers(const pqxx::connection & conn);
 };
 #endif
