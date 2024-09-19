@@ -11,6 +11,7 @@
 //user objesi yapıcam ve vector ile userlist yapıcam
 
 
+
 int main() {
     try {
         pqxx::connection conn("dbname=direction user=Ömer password=Ou131973 host=127.0.0.1 port=5432");
@@ -47,7 +48,6 @@ int main() {
                         return crow::response{500, "Database error: " + std::string(e.what())};
                     }
                 });
-
 
         CROW_ROUTE(app, "/remove_user")
                 .methods(crow::HTTPMethod::POST)
@@ -86,10 +86,6 @@ int main() {
 
                     return crow::response{users_json};
                 });
-        pqxx::work txn(conn);
-        txn.exec("INSERT INTO users (name, surname, email, phoneNumber) VALUES ($1, $2, $3, $4);");
-        txn.commit();
-
 
         app.port(18081).multithreaded().run();
     } catch (const std::exception &e) {
